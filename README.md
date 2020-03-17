@@ -1,10 +1,7 @@
 # flutter_wp
-examples of common widgets
 
 ```
- 简单的脚手架，没有过度引用第三方库，都是基于基础组件进行封装。
- 目前实际项目中能用到的东西都进行了二次封装，旨在于节省开发时间，
- 达到快速开发的目的。
+ examples of common widgets
 ```
 
 ### 1.目录结构
