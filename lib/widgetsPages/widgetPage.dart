@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_wp/widgetsPages/ListViewPage.dart';
 import 'package:flutter_wp/widgetsPages/ScrollViewPage.dart';
@@ -41,6 +42,8 @@ List<Map> _properties = [
 ];
 
 class WidgetPage extends StatelessWidget {
+
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -85,16 +88,55 @@ class WidgetPage extends StatelessWidget {
           "http://f1.webshare.mob.com/dvideo/demovideos.mp4",
           null,
           SSDKContentTypes.webpage);
-    SharesdkPlugin.showMenu(null, params, (SSDKResponseState state,
+         SharesdkPlugin.showMenu([ShareSDKPlatforms.wechatSession,ShareSDKPlatforms.wechatTimeline,ShareSDKPlatforms.qq,ShareSDKPlatforms.sina], params, (SSDKResponseState state,
         ShareSDKPlatform platform,
         Map userData,
         Map contentEntity,
         SSDKError error) {
-//      showAlert(state, error.rawData, context);
+      showAlert(state, error.rawData, context);
       print(error.rawData);
     });
+
   }
+
+  void showAlert(SSDKResponseState state, Map content, BuildContext context) {
+
+    print("--------------------------> state:" + state.toString());
+    String title = "失败";
+    switch (state) {
+      case SSDKResponseState.Success:
+        title = "成功";
+        break;
+      case SSDKResponseState.Fail:
+        title = "失败";
+        break;
+      case SSDKResponseState.Cancel:
+        title = "取消";
+        break;
+      default:
+        title = state.toString();
+        break;
+    }
+
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => CupertinoAlertDialog(
+            title: new Text(title),
+            content: new Text(content != null ? content.toString() : ""),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ]));
+  }
+
+
 }
+
+
 
 class _WigetTile extends StatelessWidget {
   const _WigetTile(this.backgroundColor, this.iconData,this.index,this.title);
