@@ -10,6 +10,8 @@ import 'package:flutter_wp/widgetsPages/PickerPage.dart';
 import 'package:flutter_wp/widgetsPages/CardPage.dart';
 import 'package:flutter_wp/widgetsPages/MenuPage.dart';
 import 'package:flutter_wp/widgetsPages/DialogPage.dart';
+import 'package:sharesdk_plugin/sharesdk_plugin.dart';
+
 
 List<StaggeredTile> _staggeredTiles = const <StaggeredTile>[
   const StaggeredTile.count(2, 2),
@@ -44,6 +46,13 @@ class WidgetPage extends StatelessWidget {
     return new Scaffold(
         appBar: new AppBar(
           title: new Text('Widgets',style: TextStyle(color: Colors.white,fontSize: 18,fontWeight: FontWeight.bold)),
+          actions: <Widget>[IconButton(
+              icon:Icon(Icons.share),
+              color: Colors.white,
+              onPressed: (){
+              print("12345");
+              showShareMenu(context);
+          })],
         ),
         body: new Padding(
           padding: const EdgeInsets.only(top: 12.0),
@@ -58,6 +67,32 @@ class WidgetPage extends StatelessWidget {
           ),
         )
     );
+  }
+
+  void showShareMenu(BuildContext context) {
+    SSDKMap params = SSDKMap()
+      ..setGeneral(
+          "title",
+          "text",
+          [
+            "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1541565611543&di=4615c8072e155090a2b833059f19ed5b&imgtype=0&src=http%3A%2F%2Fb-ssl.duitang.com%2Fuploads%2Fitem%2F201501%2F06%2F20150106003502_Ajcte.jpeg"
+          ],
+          "http://wx3.sinaimg.cn/large/006nLajtly1fpi9ikmj1kj30dw0dwwfq.jpg",
+          null,
+          "http://www.mob.com/",
+          "http://wx4.sinaimg.cn/large/006WfoFPly1fw9612f17sj30dw0dwgnd.jpg",
+          "http://i.y.qq.com/v8/playsong.html?hostuin=0&songid=&songmid=002x5Jje3eUkXT&_wv=1&source=qq&appshare=iphone&media_mid=002x5Jje3eUkXT",
+          "http://f1.webshare.mob.com/dvideo/demovideos.mp4",
+          null,
+          SSDKContentTypes.webpage);
+    SharesdkPlugin.showMenu(null, params, (SSDKResponseState state,
+        ShareSDKPlatform platform,
+        Map userData,
+        Map contentEntity,
+        SSDKError error) {
+//      showAlert(state, error.rawData, context);
+      print(error.rawData);
+    });
   }
 }
 
@@ -137,7 +172,7 @@ class _WigetTile extends StatelessWidget {
         },
         child: new Center(
           child: new Padding(
-            padding: const EdgeInsets.all(4.0),
+            padding: const EdgeInsets.all(0.0),
             child:Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
