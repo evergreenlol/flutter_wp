@@ -75,6 +75,7 @@ class NewsState extends State<NewsPage> {
   getNewsList(bool isLoadMore) {
     String url = Api.newsList;
     url += "?pageIndex=$curPage&pageSize=10";
+    print("--------$url");
     NetUtils.get(url).then((data) {
       if (data != null) {
         // 将接口返回的json字符串解析为map类型
