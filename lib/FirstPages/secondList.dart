@@ -77,8 +77,10 @@ class SecondState extends State<SecondPage> {
               }
               // 给列表数据赋值
               listData = list1;
-              isLoading = false;
             }
+
+//            isLoading = false;
+
           });
       }
     });
@@ -127,6 +129,16 @@ class SecondState extends State<SecondPage> {
     } else {
       return _buildLoadText();
     }
+  }
+
+  @override
+  void didUpdateWidget(SecondPage oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
