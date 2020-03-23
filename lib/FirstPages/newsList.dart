@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_banner_swiper/flutter_banner_swiper.dart';
-import 'package:flutter_wp/Networking/api.dart';
 import 'package:flutter_wp/Utils/netUtil.dart';
 import 'package:flutter_wp/Widgets/commonEndLine.dart';
 import 'dart:convert'; //数据转换
 import 'package:flutter_wp/Constants/Constants.dart';
 import 'package:flutter_wp/FirstPages/newsDetailPage.dart';
+import 'package:flutter_wp/Widgets/NewsListItem.dart';
 
 class NewsPage extends StatefulWidget {
 
@@ -27,6 +27,13 @@ class NewsState extends State<NewsPage> {
   var curPage = 1;
   var listTotalSize = 0;
   BannerSwiper banner;
+
+  final List<dynamic> bannerData = [
+    {'image': 'https://img.alicdn.com/tfs/TB1W4hMAwHqK1RjSZJnXXbNLpXa-519-260.jpg', 'type': 0, 'id': 9695909, 'url': 'https://www.zhihu.com/question/294145797/answer/551162834', 'title': '为什么阿里巴巴、腾讯和 Google 之类的企业都在使用 Flutter 开发 App？'},
+    {'image': 'https://img.alicdn.com/tfs/TB1XmFIApzqK1RjSZSgXXcpAVXa-720-338.jpg', 'type': 0, 'id': 9695859, 'url': 'https://zhuanlan.zhihu.com/p/51696594', 'title': 'Flutter 1.0 正式发布: Google 的便携 UI 工具包'},
+    {'image': 'https://img.alicdn.com/tfs/TB1mClCABLoK1RjSZFuXXXn0XXa-600-362.jpg', 'type': 0, 'id': 96956491409, 'url':'https://zhuanlan.zhihu.com/p/53497167','title': 'Flutter 示范应用现已开源 — 万物起源(The History of Everything)'},
+    {'image': 'https://img.alicdn.com/tfs/TB1fXxIAAvoK1RjSZFNXXcxMVXa-600-362.jpg', 'type': 0, 'id': 9695816, 'url': 'https://mp.weixin.qq.com/s?__biz=MzAwODY4OTk2Mg==&mid=2652048101&idx=1&sn=20296088e4bd8ca33c5c9991167d9f7d&chksm=808caaa0b7fb23b65c0e5806209f8d86da6732f3a00a70353f3606018339518b0a8656f14dc5&mpsshare=1&scene=2&srcid=0106SZapVysZdIS6Oc5AhNH6&from=timeline&ascene=2&devicetype=android-27&version=27000038&nettype=WIFI&abtest_cookie=BQABAAgACgALABMAFAAFAJ2GHgAjlx4AV5keAJuZHgCcmR4AAAA%3D&lang=zh_CN&pass_ticket=4K1%2FUpsxP4suPj2iubR17wbAP7r9LW9iYrPAC2dppTqv7j7JO5FWMXtcKeBRxueV&wx_header=1', 'title': 'Flutter 与 Material Design 双剑合璧，助您构建精美应用'}
+  ];
 
   @override
   void initState() {
@@ -63,8 +70,29 @@ class NewsState extends State<NewsPage> {
     } else {
       // 有数据，显示ListView
       Widget listView = ListView.builder(
-        itemCount: listData.length * 2,
-        itemBuilder: (context, i) => renderRow(i),
+        itemCount: listData.length + 1,
+        itemBuilder: (context, i){
+
+          if(i == 0){
+            return banner;
+          }else {
+
+            var subTitle = '${'👲'}: ${listData[i - 1]['viewsCount']} ';
+            var title = '${listData[i - 1]['title']}';
+            var codeUrl = '${listData[i - 1]['originalUrl']}';
+
+//            return new NewsListItem(title: title,subTitle: subTitle);
+              return InkWell(
+                child: new NewsListItem(title: title,subTitle: subTitle),
+                onTap: (){
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (ctx) => NewsDetailPage(id:codeUrl)
+                  ));
+                },
+              );
+          }
+
+        },
         controller: _controller,
       );
       return RefreshIndicator(child: listView, onRefresh: _pullToRefresh);
@@ -73,26 +101,24 @@ class NewsState extends State<NewsPage> {
 
   // 从网络获取数据，isLoadMore表示是否是加载更多数据
   getNewsList(bool isLoadMore) {
-    String url = Api.newsList;
-    url += "?pageIndex=$curPage&pageSize=10";
-    print("--------$url");
+
+    String url = 'https://fluttergo.pub:9527/juejin.im/v1/get_tag_entry?src=web&tagId=5a96291f6fb9a0535b535438';
+    url += "&page=$curPage&pageSize=10&sort=rankIndex";
+
     NetUtils.get(url).then((data) {
       if (data != null) {
         // 将接口返回的json字符串解析为map类型
         Map<String, dynamic> map = json.decode(data);
-        if (map['code'] == 0) {
-          // code=0表示请求成功
-          var msg = map['msg'];
+
           // total表示资讯总条数
-          listTotalSize = msg['news']['total'];
+          listTotalSize = map['d']['total'];
           // data为数据内容，其中包含slide和news两部分，分别表示头部轮播图数据，和下面的列表数据
-          var _listData = msg['news']['data'];
-          var _slideData = msg['slide'];
+          var _listData = map['d']['entrylist'];
+
           setState(() {
             if (!isLoadMore) {
               // 不是加载更多，则直接为变量赋值
               listData = _listData;
-              slideData = _slideData;
             } else {
               // 是加载更多，则需要将取到的news数据追加到原来的数据后面
               List list1 = List();
@@ -107,12 +133,12 @@ class NewsState extends State<NewsPage> {
               // 给列表数据赋值
               listData = list1;
               // 轮播图数据
-              slideData = _slideData;
+//              slideData = _slideData;
             }
             initSlider();
           });
         }
-      }
+//      }
     });
   }
 
@@ -123,14 +149,14 @@ class NewsState extends State<NewsPage> {
       height: 108,
       width: 54,
       //轮播图数目 必传
-      length: slideData.length,
+      length: bannerData.length,
 
       //轮播的item  widget 必传
       getwidget: (index) {
-        var item = slideData[index % slideData.length];
-        var imgUrl = item['imgUrl'];
+        var item = bannerData[index % bannerData.length];
+        var imgUrl = item['image'];
 //        var title = item['title'];
-        var detailUrl = item['detailUrl'];
+        var detailUrl = item['url'];
         return new GestureDetector(
             child:  Image.network(imgUrl,fit: BoxFit.cover,),
             onTap: () {
@@ -143,140 +169,4 @@ class NewsState extends State<NewsPage> {
     );
   }
 
-  Widget renderRow(i) {
-    if (i == 0) {
-      return Container(
-          height: 180.0,
-          child: Stack(
-            children: <Widget>[
-              banner
-            ],
-          )
-      );
-    }
-    i -= 1;
-    if (i.isOdd) {
-      return Divider(height: 1.0);
-    }
-    i = i ~/ 2;
-    var itemData = listData[i];
-    if (itemData is String && itemData == Constant.endLineTag) {
-      return CommonEndLine();
-    }
-    var titleRow = Row(
-      children: <Widget>[
-        Expanded(
-          child: Text(itemData['title'], style: titleTextStyle),
-        )
-      ],
-    );
-    var timeRow = Row(
-      children: <Widget>[
-        Container(
-          width: 20.0,
-          height: 20.0,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFFECECEC),
-            image: DecorationImage(
-                image: NetworkImage(itemData['authorImg']), fit: BoxFit.cover),
-            border: Border.all(
-              color: const Color(0xFFECECEC),
-              width: 2.0,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 0.0),
-          child: Text(
-            itemData['timeStr'],
-            style: subtitleStyle,
-          ),
-        ),
-        Expanded(
-          flex: 1,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              Text("${itemData['commCount']}", style: subtitleStyle),
-//              Image.asset('./images/ic_comment.png', width: 16.0, height: 16.0),
-            ],
-          ),
-        )
-      ],
-    );
-    var thumbImgUrl = itemData['thumb'];
-    var thumbImg = Container(
-      margin: const EdgeInsets.all(10.0),
-      width: 60.0,
-      height: 60.0,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFFECECEC),
-        image: DecorationImage(
-            image: ExactAssetImage('./images/ic_news_placeholder.png'),
-            fit: BoxFit.cover),
-        border: Border.all(
-          color: const Color(0xFFECECEC),
-          width: 2.0,
-        ),
-      ),
-    );
-    if (thumbImgUrl != null && thumbImgUrl.length > 0) {
-      thumbImg = Container(
-        margin: const EdgeInsets.all(10.0),
-        width: 60.0,
-        height: 60.0,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFFECECEC),
-          image: DecorationImage(
-              image: NetworkImage(thumbImgUrl), fit: BoxFit.cover),
-          border: Border.all(
-            color: const Color(0xFFECECEC),
-            width: 2.0,
-          ),
-        ),
-      );
-    }
-    var row = Row(
-      children: <Widget>[
-        Expanded(
-          flex: 1,
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              children: <Widget>[
-                titleRow,
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0.0, 8.0, 0.0, 0.0),
-                  child: timeRow,
-                )
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(6.0),
-          child: Container(
-            width: 100.0,
-            height: 80.0,
-            color: const Color(0xFFECECEC),
-            child: Center(
-              child: thumbImg,
-            ),
-          ),
-        )
-      ],
-    );
-    return InkWell(
-      child: row,
-      onTap: () {
-        print(itemData['detailUrl']);
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (ctx) => NewsDetailPage(id: itemData['detailUrl'])
-        ));
-      },
-    );
-  }
 }
