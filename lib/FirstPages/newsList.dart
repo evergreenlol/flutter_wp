@@ -6,6 +6,8 @@ import 'dart:convert'; //数据转换
 import 'package:flutter_wp/Constants/Constants.dart';
 import 'package:flutter_wp/FirstPages/newsDetailPage.dart';
 import 'package:flutter_wp/Widgets/NewsListItem.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:flutter/cupertino.dart';
 
 class NewsPage extends StatefulWidget {
 
@@ -19,6 +21,8 @@ class NewsPage extends StatefulWidget {
 class NewsState extends State<NewsPage> {
 
   final ScrollController _controller = ScrollController();
+  RefreshController _refreshController = RefreshController(initialRefresh: false);
+
   final TextStyle titleTextStyle = TextStyle(fontSize: 15.0);
   final TextStyle subtitleStyle = TextStyle(color: const Color(0xFFB5BDC0), fontSize: 12.0);
 
@@ -40,22 +44,30 @@ class NewsState extends State<NewsPage> {
     // TODO: implement initState
     super.initState();
 
-    _controller.addListener((){
-      var maxScroll = _controller.position.maxScrollExtent;
-      var pixels = _controller.position.pixels;
-      if (maxScroll == pixels && listData.length < listTotalSize) {
-        // scroll to bottom, get next page data
-//        print("load more ... ");
-        curPage++;
-        getNewsList(true);
-      }
-    });
+//    _controller.addListener((){
+//      var maxScroll = _controller.position.maxScrollExtent;
+//      var pixels = _controller.position.pixels;
+//      if (maxScroll == pixels && listData.length < listTotalSize) {
+//        // scroll to bottom, get next page data
+////        print("load more ... ");
+//        curPage++;
+//        getNewsList(true);
+//      }
+//    });
     getNewsList(false);
   }
 
   Future<Null> _pullToRefresh() async {
     curPage = 1;
     getNewsList(false);
+
+    return null;
+  }
+
+  Future<Null> _pullToLoad() async{
+    curPage++;
+    getNewsList(true);
+
     return null;
   }
 
@@ -95,7 +107,35 @@ class NewsState extends State<NewsPage> {
         },
         controller: _controller,
       );
-      return RefreshIndicator(child: listView, onRefresh: _pullToRefresh);
+      return SmartRefresher(
+        controller: _refreshController,
+        onRefresh: _pullToRefresh,
+        onLoading: _pullToLoad,
+        enablePullDown: true,
+        enablePullUp: true,
+        header: WaterDropHeader(),
+        footer:CustomFooter(
+          builder: (BuildContext context, LoadStatus mode){
+            Widget body;
+            if(mode==LoadStatus.idle){
+              body =  Text("pull up load");
+            } else if(mode==LoadStatus.loading){
+              body =  CupertinoActivityIndicator();
+            } else if(mode == LoadStatus.failed){
+              body = Text("Load Failed!Click retry!");
+            } else if(mode == LoadStatus.canLoading){
+              body = Text("release to load more");
+            } else{
+              body = Text("No more Data");
+            }
+            return Container(
+              height: 55.0,
+              child: Center(child:body),
+            );
+          },
+        ),
+        child: listView,
+      );
     }
   }
 
@@ -119,6 +159,7 @@ class NewsState extends State<NewsPage> {
             if (!isLoadMore) {
               // 不是加载更多，则直接为变量赋值
               listData = _listData;
+              _refreshController.refreshCompleted();
             } else {
               // 是加载更多，则需要将取到的news数据追加到原来的数据后面
               List list1 = List();
@@ -132,8 +173,7 @@ class NewsState extends State<NewsPage> {
               }
               // 给列表数据赋值
               listData = list1;
-              // 轮播图数据
-//              slideData = _slideData;
+              _refreshController.loadComplete();
             }
             initSlider();
           });
